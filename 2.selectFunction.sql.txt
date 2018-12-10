@@ -1,0 +1,254 @@
+-- 3.selectFunction.sql
+-- 단일행 함수 : 입력 데이터 수만큼 출력 데이터가 나오는 것
+/* Oracle Db 자체적인 지원 함수 다수 존재
+1. 숫자 함수
+2. 문자 함수
+3. 날짜 함수 
+4. ... */
+
+
+-- 오라클 dumy table 검색
+-- dual table : 산술 연산 결과등을 확인하기 위한 임시 table
+select * from dual;
+select 2+3 from dual;
+select sysdate from dual;
+
+
+
+-- *** [숫자함수] ***
+-- 1. 절대값 구하는 함수 : abs()
+select -2, abs(-2) from dual;
+-2,2 
+
+/* 함수 개념
+1. 주 용도: 기능이 이미 구현된 재사용 가능한 로직
+2. abs() 함수로 함수들 이해하기
+	-abs(): 숫자값으로 절대값으로 변환해서 값을 호출한 곳으로 전송(응답, 리턴)
+		: 필요한 정보(문자, 숫자) -> 가공 -> 숫자값으로 변환
+
+*/
+-- 2. 반올림 구하는 함수 : round(데이터 [, 반올림자릿수])
+select 34.53, round(34.53) from dual;
+
+select 345.653, round(345.653, 1) from dual;
+
+-- 3. 지정한 자리수 이하 버리는 함수 : trunc()
+-- trunc(데이터, 자릿수)
+-- 자릿수 : +(소수점 이하), -(정수 의미)
+-- 참고 : 존재하는 table의 데이터만 삭제시 방법 : delete[복원]/truncate[복원불가]
+
+select 34.53, trunc(34.53) from dual;
+
+
+
+-- 4. 나누고 난 나머지 값 연산 함수 : mod()
+
+select mod(17,3) from dual;
+
+-- 5. ? emp table에서 사번이 홀수인 사원의 이름, 사번 검색 
+
+select ename, empno from emp where mod(empno,2)<>0;
+select ename, empno from emp where mod(empno,2)!=0;
+select ename, empno from emp where mod(empno,2)=1;
+
+--6. 제곱수 구하는 함수 : power()
+
+select power(3,2) from dual;
+
+3^2=9
+
+-- *** [문자함수] ***
+-- 1. 대, 소문자로 변화시키는 함수
+-- upper() : 대문자[uppercase]
+-- lower() : 소문자[lowercase]
+
+select 'AbCd', upper('AbCd'), lower('AbCd') from dual;
+
+
+--2. ? manager로 job 칼럼과 뜻이 일치되는 사원의 사원명 검색하기 
+
+select ename from emp where job=upper('manager');
+select ename from emp where lower(job)= 'manager';
+
+--3. 문자열 길이 체크함수 : length()
+--4. byte 수 체크 함수 : lengthb()
+select length('가'), lengthb('가') from dual;
+1, 3
+
+--5. 문자열 일부 추출 함수 : substr()
+-- 서브스트링: 하나의 문자열에서 일부 언어 발췌하는 로직 표현
+-- *** 자바스크립트, 파이썬, 자바에서의 문자열 index(각 음절의 위치 순서)는 0부터 시작, sql에서 1부터 시작
+-- *** 권장습관 : 프로그램에 sql을 반영시 DB와 직접 sql 실습후에 문제 없는 sql 문장에 한해서만 코드 반영
+
+-- substr(데이터, 시작위치, 추출할 개수)
+SQL> select substr('victory', 2,6) from dual;
+
+SUBSTR
+------------
+ictory
+
+--6. ? 년도 구분없이 2월에 입사한 사원이름, 입사일 검색
+-- date 타입에도 substr() 함수 사용 가능 
+-- '/' 도 index로 고려해야 하는지 확인하기 위한 길이 확인
+select length(hiredate) from emp;
+-- '/' 도 index로 고려한다.
+
+select ename, substr(hiredate,7,2) from emp where substr(hiredate,4,2)=02;
+
+--7. 문자열 앞뒤의 잉여 여백 제거 함수 : trim()
+/* length(trim('abc'))
+	'abc'문자열에 디비에 생성
+	trim() 호출해서 잉여 여백제거
+	trim() 결과값으로  length() 실행 
+*/
+select ' abc ', length(' a bc'), trim('      abc') from dual;
+
+/* 중간 점검
+1. 용어
+	함수(자바에선 메소드, python에선 메소드,함수,  javascript에선 메소드,함수)
+			-이미 기능이 구현된 처리 로직
+			-이름이 있음, 호출해서 사용
+			-함수를 만든다(구현, 개발)
+			-함수를 사용한다(호출)
+			-재사용성을 고려한 사전 개발
+		argument(parameter, 매개변수, 매개인자, 인자, 인수)
+
+-- *** [날짜 함수] ***
+--1. ?어제, 오늘, 내일 날짜 검색 
+-- 현재 시스템 날짜에 대한 정보 제공 속성 : sysdate
+select sysdate-1 어제, sysdate 오늘, sysdate+1 내일 from dual;
+
+--2.?emp table에서 근무일수 계산하기, 사번과 근무일수(반올림) 검색
+	-- 검색한 결과값 문자열 결합 : || 결합연산자 사용 
+	-- 힌트 sysdate : 숫자 연산, 날짜 연산 다 가능
+select round(sysdate-hiredate)||'일 경과'  from emp;
+
+--3. 특정 개월수 더하는 함수 : add_months()
+-- 6개월 이후 검색 
+
+SELECT add_months(sysdate,6) from dual;
+
+--4. ? 입사일 이후 3개월 지난 일수 검색
+select add_months(hiredate,3) from emp;
+
+--5. 두 날짜 사이의 개월수 검색 : months_between()
+select months_between(sysdate,'2016-09-19') from dual;
+
+--6. 요일을 기준으로 특정 날짜 검색 : next_day()
+select sysdate, next_day(sysdate, '토요일') from dual;
+
+--7. 주어진 날짜를 기준으로 해당 달의 가장 마지막 날짜 : last_day()
+select last_day('2016-09-01') from dual;
+
+LAST_DAY
+--------
+16/09/30
+
+--8.? 2016년 2월의 마지막 날짜는?
+select last_day('2016-02-01') from dual;
+
+LAST_DAY
+--------
+16/02/29
+
+-- *** [형변환 함수] ***
+--[1] to_char() : 날짜->문자, 숫자 -> 문자
+	-- to_char(날자데이타, '희망포멧문자열')
+--[2] to_date() : 날짜로 변경 시키는 함수
+--[3] to_number() : 문자열을 숫자로 변환
+
+
+
+-- [1] to_char()
+--1. 오늘 날짜를 'yyyy-mm-dd' 변환 : 
+select to_char(sysdate, 'yyyy-mm-dd') from dual;
+select to_char(sysdate, 'yyyy/mm/dd') from dual;
+select to_char(sysdate, 'yyyy-mm-dd hh24:mi:ss') from dual;
+
+--dy는 요일 의미
+select to_char(sysdate, 'yyyy-mm-dd dy') from dual;
+
+-- hh:mi:ss = 12시간을 기준으로 시분초
+select to_char(sysdate, 'yyyy-mm-dd hh:mi:ss') from dual;
+
+-- hh24:mi:ss = 24시간을 기준으로 시분초
+select to_char(sysdate, 'yyyy-mm-dd hh24:mi:ss') from dual;
+
+-- hh:mi:ss am = am과 pm은 오전 오후 의미, am을 주로 사용 
+select to_char(sysdate, 'yyyy-mm-dd hh:mi:ss am') from dual;
+
+
+--2.날짜의 round(), trunc()
+-- 날짜의 round() : 정오를 기준으로 이 시간 초과시 무조건 다음 날짜
+--			   : 가령 12까지를 원서 접수 또는 택배마감등
+-- 날짜의 trunc() : 24시간 내의 모든 내용 당일 처리
+select round(sysdate) from dual;
+select trunc(sysdate) from dual;
+
+-- 3. 숫자를 문자형으로 변환 : to_char()
+--1. 숫자를 원하는 형식으로 변환 검색
+-- 9 : 자릿수 숫자 의미(자릿수 채우지 않음)
+-- 0 :	 "		(자릿수 채움)
+-- . : 소수점 표현
+-- , : 원단위 표현
+-- $ : 달러 
+-- L or l : 로케일의 줄임말(os 자체의 인코딩 기본 정보로 해당 언어의 기본 통화표현)
+select to_char(1234, '9999.99') from dual;
+select to_char(1234, '$9999,99') from dual;
+select to_char(1234, '9999') from dual;
+select to_char(1234, '999,999') from dual; 
+select to_char(1234, '99999') from dual;
+select to_char(1234, '00000') from dual;
+select to_char(1234, 'L99,999') from dual;
+select to_char(1234, 'l99,999') from dual;
+
+
+
+--[2] to_date() : 날짜로 변경 시키는 함수
+
+--1. 올해 며칠이 지났는지 검색(포멧 yyyy/mm/dd)
+-- 문법 오류 : select sysdate-20160101 from dual;
+-- 문법 오류 : select sysdate-'20160101' from dual;
+
+
+--3. 문자열로 date타입 검색 가능[데이터값 표현이 유연함]
+
+
+
+
+-- [3] to_number() : 문자열을 숫자로 변환
+--1. '20,000'의 데이터에서 '10,000' 산술 연산하기 
+--힌트 -9 :'20,000'의 데이터에서 '10,000'산술 연산하기
+
+select to_char((to_number('20,000', '99,999')-to_number('10,000','99,999')),'999,999') from dual;
+
+-- *** 조건식 함수 ***
+-- decode()-if or switch문과 같은 함수 ***
+-- decode(조건칼럼, 조건값1,  출력데이터1,
+--			      조건값2,   출력데이터2,
+--				...
+--			       default값);
+
+--1. deptno 에 따른 출력 데이터
+select deptno, decode(deptno,	10, 'A',
+						20, 'B',
+						'무');
+from emp;
+
+
+--2. emp table의 연봉(sal) 인상계산
+-- job이 ANALYST 5%인상, SALESMAN은 10% 인상, MANAGER는 15%, CLERK 20% 이상 
+
+select sal 연봉, decode(job, 'ANALYST', sal*1.05,'SALESMAN', sal*1.1, 'MANAGER', sal*1.15, 'CLERK',sal*1.2,sal) 인상연봉 from emp;
+
+--3. 'MANAGER'인 직군은 '갑', 'ANALYST' 직군은 '을', 나머지는 '병'으로 검색
+-- 검색 데이터 ename, job, 갑?을?병? 검색 
+
+select ename,job, decode(job, 'MANAGER','갑', 'ANALYST', '을','병') from emp;
+
+
+
+
+과제 달러를 원으로 바꾸어라
+
+select ename, to_char(decode(job, 'ANALYST', sal*1.05*1123,'SALESMAN', sal*1.1*1123, 'MANAGER', sal*1.15*1123, 'CLERK',sal*1.2*1123,sal*1123),'L999,999,999') 연봉인상  from emp;

@@ -1,0 +1,217 @@
+-- 7.DDL.sql
+-- table 생성(create)과 삭제(drop), table 구조 수정(alter)
+
+-- DDL(Data Definition Language)
+/* CRUD
+	- C: create, 데이터 생성
+		-이미 존재 하는 table에 데이터를 새롭게 저장, insert
+	- R: read, 존재하는 데이터 검색
+		-select
+			select -> where -> order by -group by -> having -> join -> sub query
+
+-- Oracle타입 : 자바 타입   = varchar2,char : String
+--				     = number(전체자리수[, 소수점이하자리]) : 정수, 실수
+--				     = date : java.util.Date, java.sql.Date, String
+--					tip : 현업[필드,실무]에서는 date타입을 String으로 사용 빈도 높다 
+/* 참고 : 
+	- varchar2[최대 메모리] : char[고정사이즈메모리] 
+	- varchar2(10)의 타입에 - abc 저장(실제 메모리는? 3byte만 사용)
+	- char(5)로 선언 - a 저장(실제 메모리는 5byte 소진)	
+	- oracle 인 경우 varchar로만 설정해도 varchar2로 자동 변환
+		:oracle8 이전엔 varchar2가 아닌 varchar로만 사용
+
+	
+  * varchar2
+	- 범위 설정없이 선언시 자동 점유 사이즈(오라클은 4000 byte)
+	- oracle 8i까지의 문자열 표현 : varchar
+	- 11g에도 varchar로 설정시 자동으로 varchar2로 변경 
+	- 참고 : ms sql인 경우 8000byte로 최대값 설정함
+
+  * number 
+	- 자릿수 제한없이 선언시 38자리 자동 설정
+
+ [1] table 생성 명령어
+    create table table명(
+	칼럼명1 칼럼타입[(사이즈)] [제약조건] ,
+	칼럼명2....
+    ); 
+
+[2] table 삭제 명령어
+	drop table table명;
+
+[3] table 구조 수정 명령어
+
+*/
+--존재하는 table 삭제 명령어
+/* 참고사항 - 현업에선 주로 sql 문장 백업시 혹여 존재하는 table명이 이미 있을까? 하는 우려감에 table 삭제 명령어 선행*/
+drop table test;
+create table test(
+	--컬럼명 타입(사이즈)
+	name varchar(10),
+	name2 char(10)
+);
+desc test;
+select * from test;
+
+
+--새로운 데이터 저장 -> 컬렴명 byte 확인 함수(length())
+insert into test values('이름1', '이름2');
+
+--varchar2 와 char의 메모리 사이즈 확인 : 데이터 저장된 이후의 확인
+--결론 : 가변적인 문자열 타입엔 varchar2 권장
+select lengthb(name), lengthb(name2) from test;
+
+
+--1. table삭제 
+drop table test;
+
+
+--2. table 생성  
+-- name(varchar2), age(number3) 칼럼 보유한 people table 생성
+drop table people;
+
+create table people(
+	name varchar2(20) not null,
+	age number(3) not null
+);
+desc people;
+
+
+-- 3. 서브 쿼리 활용해서 emp01 table 생성(이미 존재하는 table기반으로 생성)
+-- emp table의 모든 데이터로 emp01 생성
+
+create table emp01 as select * from emp;
+desc emp01;
+select * from emp01;
+
+
+-- 4. 서브쿼리 활용해서 특정 칼럼(empno)만으로 emp02 table 생성
+drop table emp02;
+
+create table emp02 as select empno from emp;
+desc emp02;
+select * from emp02;
+
+
+--5. deptno=10 조건문 반영해서 emp03 table 생성
+
+create table emp03 as select * from emp where deptno=10;
+desc emp03;
+select * from emp03;
+
+
+-- 6. 데이터 insert없이 table 구조로만 새로운 emp04 table생성시 
+-- 사용되는 조건식 : where=거짓
+
+drop table emp04;
+
+create table emp04 as select * from emp where 1=0;
+desc emp04;
+
+select * from emp04;
+
+
+
+-- *** table 수정 : alter ***
+/* 데이터 구조 변경
+1. 미존재하는 컬럼 추가
+2. 존재하는 컬럼 삭제
+3. 존재하는 컬럼의 타입(사이즈) 변경
+	경우의 수 1 : 기존 사이즈보다 작게 수정
+	경우의 수 2 : 기존 사이즈보다 크게 수정
+
+*이런 작업시 발생되는 문제
+	1. 문법 오류는 배제
+	2. 컬럼명 중복 배제
+	3. 이미 존재하는 데이터가 있을 경우
+		컬럼 사이즈 변경
+			크게? OK
+			작게?
+				컬럼 사이즈보다 데이터는 작거나 같은 사이즈
+				- 혹여	: 최대 데이터 사이즈보다 크게 변경
+				        : 최대 데이터 사이즈보다 작게 변경 시도
+		타입 변경
+*/
+-- emp01 table로 실습해 보기
+
+--7. emp01 table에 job이라는 특정 칼럼 추가(job varchar2(10))
+-- 이미 데이터를 보유한 table에 새로운 job칼럼 추가 가능 
+-- add() : 컬럼 추가 함수
+
+desc emp01;
+drop table emp01;
+create table emp01 as select empno, ename from emp;
+desc emp01;
+
+alter table emp01 add(job varchar(10));
+desc emp01;
+select * from emp01;
+
+
+
+--8. 이미 존재하는 칼럼 사이즈 변경 시도해 보기
+-- 데이터 미 존재 칼럼의 사이즈 수정
+-- modify
+
+alter table emp01 modify(job varchar2(20));
+desc emp01;
+
+alter table emp01 modify(job varchar2(5));
+desc emp01;
+
+
+--9. 이미 데이터가 존재할 경우 칼럼 사이즈가 큰 사이즈의 컬럼으로 변경 가능 
+-- 혹 사이즈 감소시 주의사항 : 이미 존재하는 데이터보다 적은 사이즈로 변경 절대 불가 
+drop table emp01;
+create table emp01 as select empno, ename, job from emp;
+select * from emp01;
+desc emp01;
+
+alter table emp01 modify(job varchar(30));
+desc emp01;
+select * from emp01;
+alter table emp01 modify(job varchar(10));
+alter table emp01 modify(job varchar(5)); -- 불가능
+
+--최대길이 확인 문장
+select max(length(job)) from emp01;
+
+--10. job 칼럼 삭제 
+-- 데이터 존재시에도 자동 삭제 
+--drop
+
+alter table emp01 drop column job;
+
+desc emp01;
+select * from emp01;
+
+
+--11. emp01을 test01로 table 이름 변경
+rename emp01 to test01;
+
+select * from test01;
+
+/* 오라클 DB는 9i 쯤....
+select시에 사용자는 불필요한 table들이 검색
+이 table의 용도는 oracle DB 자체적인 부가정보 관리
+단, 삭제 가능
+*/
+--불필요한 쓰레기 table 삭제
+purge recyclebin;
+select * from tab;
+
+
+--12. table의 순수 데이터만 완벽하게 삭제하는 명령어 
+--commit 불필요
+select * from test01;
+truncate table test01;
+select * from test01;
+
+
+
+
+
+
+
+
+

@@ -194,7 +194,7 @@ and m.ename <> 'SMITH';
 	- +기호는 데이터 표현이 부족한 쪽에 표기해준다.
 
 
-*/************이해하기힘듬 존나중요 씨발
+*/************이해하기힘듬
 --e.mgr은 빈값을 포함하고 그에 해당하는 m.empno는 빈값을 제외한 empno만 갖기때문에 m.empno에 (+)
 select e.ename 사원, m.ename 매니저,m.empno,e.mgr
 from emp e, emp m
